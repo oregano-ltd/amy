@@ -1,5 +1,6 @@
 'use strict';
-const threshold = .90;
+
+// so what do you require?
 const {
     Botkit
 } = require('botkit');
@@ -20,17 +21,22 @@ const luisOptions = {
     serviceUri: config.luis.serviceUri
 }
 
-controller.middleware.ingest.use(() => {
-    console.log('yes, i got your message')
-});
+// ok, let's see what you need
 
-controller.middleware.send.use(() => {
-    console.log('yes, message is sent.')
-});
+const threshold = config.nlp.threshold;
+
+// controller.middleware.ingest.use(() => {
+//     console.log('yes, i got your message')
+// });
+
+// controller.middleware.send.use(() => {
+//     console.log('yes, message is sent.')
+// });
 
 controller.middleware.receive.use(luis.middleware.receive(luisOptions));
 
 controller.on('message', async (bot, message) => {
+
     let reply = 'sorry, did not understand your request.';
 
     if (message.topIntent) {
@@ -45,9 +51,13 @@ controller.on('message', async (bot, message) => {
             // console.log(message.entities);
             reply = person + ' is our manager.';
         }
-        if (intent == 'weather') {
-            reply = 'it is cloudy.';
+        if (intent == 'weather' && score >= threshold) {
+            reply = 'it is cloudy today.';
+        }
+
+        if (intent == 'hru' && score >= threshold) {
+            reply = 'I am great, how about you?';
         }
     }
-    await bot.reply(message, reply);
+    await bot.say(reply);
 });
